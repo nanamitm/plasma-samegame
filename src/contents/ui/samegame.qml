@@ -294,15 +294,15 @@ Controls.ApplicationWindow {
     // 音声設定ポップアップ
     Controls.Popup {
         id: audioPopup
+        parent: Overlay.overlay   // ウィンドウ全体を親にする
         modal: false
         focus: true
         closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside
         padding: 12
 
-        // ツールバーの設定ボタンの真上に表示
-        x: settingsButton.mapToItem(root.contentItem, 0, 0).x
-           - width + settingsButton.width
-        y: settingsButton.mapToItem(root.contentItem, 0, 0).y - height - 4
+        // ツールバーの設定ボタンの真上（右寄せ）に表示
+        x: parent.width  - width  - 4
+        y: parent.height - height - toolBar.height - 4
 
         GridLayout {
             columns: 3
