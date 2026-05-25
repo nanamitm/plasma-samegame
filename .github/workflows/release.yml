@@ -30,17 +30,17 @@ jobs:
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Configure
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: cmake --build build
+      - name: Configure & Build
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          cmake --install build --prefix installed
 
       - name: Package (windeployqt)
         shell: pwsh
         run: |
           New-Item -ItemType Directory pkg
-          Copy-Item build\src\samegame.exe pkg\
+          Copy-Item installed\bin\samegame.exe pkg\
           & "$env:Qt6_DIR\bin\windeployqt.exe" `
               --release --no-translations `
               --qmldir src\contents\ui `
@@ -78,16 +78,18 @@ jobs:
           modules: qtmultimedia
           cache: true
 
-      - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: cmake --build build
+      - name: Configure & Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          cmake --install build --prefix installed
 
       - name: Create AppImage
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
           VERSION: latest
+          QMAKE: ${{ env.Qt6_DIR }}/bin/qmake
+          QML_SOURCES_PATHS: ${{ github.workspace }}/src/contents/ui
         run: |
           wget -qO linuxdeploy.AppImage \
             https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
@@ -95,25 +97,21 @@ jobs:
             https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
           chmod +x linuxdeploy.AppImage linuxdeploy-plugin-qt.AppImage
 
-          # アイコン
           mkdir -p icons
           cp src/contents/ui/shared/pics/star.png icons/samegame.png
 
-          # デスクトップファイル
           cat > samegame.desktop << 'EOF'
-          [Desktop Entry]
-          Name=Samegame
-          Exec=samegame
-          Icon=samegame
-          Type=Application
-          Categories=Game;BoardGame;
-          EOF
+[Desktop Entry]
+Name=Samegame
+Exec=samegame
+Icon=samegame
+Type=Application
+Categories=Game;BoardGame;
+EOF
 
-          QMAKE=$Qt6_DIR/bin/qmake \
-          QML_SOURCES_PATHS=$GITHUB_WORKSPACE/src/contents/ui \
           ./linuxdeploy.AppImage \
             --appdir AppDir \
-            --executable build/src/samegame \
+            --executable installed/bin/samegame \
             --desktop-file samegame.desktop \
             --icon-file icons/samegame.png \
             --plugin qt \
