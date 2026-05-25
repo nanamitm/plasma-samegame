@@ -260,6 +260,19 @@ Controls.ApplicationWindow {
                     }
                 }
             }
+            Controls.Slider {
+                id: volumeSlider
+                from: 0.0
+                to: 1.0
+                value: bgmAudio.volume
+                stepSize: 0.05
+                enabled: root.bgmEnabled
+                opacity: root.bgmEnabled ? 1.0 : 0.4
+                implicitWidth: 80
+                onMoved: bgmAudio.volume = value
+
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+            }
         }
     }
 }
