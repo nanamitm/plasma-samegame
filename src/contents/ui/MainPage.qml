@@ -1,20 +1,17 @@
 /**
  * SPDX-FileCopyrightText: (C) 2013 Digia Plc and/or its subsidiary(-ies)
- * 
+ *
  * SPDX-LicenseRef: BSD-3-Clause
  */
 
-import QtQuick 2.0
-import QtQuick.Window 2.14
-import org.kde.kirigami 2.12 as Kirigami
-import QtQuick.Controls 2.14 as QQC2
-import QtQuick.Layouts 1.14
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import "samegame.js" as SameGame
 
-Kirigami.Page {
+Page {
     id: root
-    title: i18n("Samegame")
-    globalToolBarStyle: Kirigami.ApplicationHeaderStyle.None
+    header: null
 
     background: Image {
         id: background
@@ -30,11 +27,11 @@ Kirigami.Page {
 
         Component.onCompleted: console.log(width)
 
-        anchors.centerIn: parent
         anchors.fill: parent
 
         MouseArea {
-            anchors.fill: parent; onClicked: SameGame.handleClick(mouse.x,mouse.y);
+            anchors.fill: parent
+            onClicked: SameGame.handleClick(mouse.x, mouse.y)
         }
     }
 
@@ -58,22 +55,22 @@ Kirigami.Page {
     }
     //![0]
 
-    footer: QQC2.ToolBar {
+    footer: ToolBar {
         id: toolBar
         RowLayout {
             anchors.fill: parent
-            QQC2.ToolButton {
-                text: i18n("New Game")
+            ToolButton {
+                text: qsTr("New Game")
                 onClicked: SameGame.startNewGame()
             }
 
-            QQC2.ToolButton {
-                text: i18n("Quit")
+            ToolButton {
+                text: qsTr("Quit")
                 onClicked: Qt.quit()
             }
 
-            QQC2.Label {
-                text: i18n("Score: ") + gameCanvas.score
+            Label {
+                text: qsTr("Score: ") + gameCanvas.score
             }
         }
     }
