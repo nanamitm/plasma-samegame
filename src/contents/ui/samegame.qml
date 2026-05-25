@@ -9,7 +9,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import QtMultimedia
-import Qt.labs.settings 1.0
+import QtCore
 import "samegame.js" as SameGame
 
 Controls.ApplicationWindow {
