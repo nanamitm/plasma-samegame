@@ -9,6 +9,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import QtMultimedia
+import Qt.labs.settings 1.0
 import "samegame.js" as SameGame
 
 Controls.ApplicationWindow {
@@ -22,7 +23,14 @@ Controls.ApplicationWindow {
 
     property bool gameStarted: false
     property int displayScore: 0
-    property bool bgmEnabled: true
+    property bool bgmEnabled: appSettings.bgmEnabled
+
+    // 設定の永続化
+    Settings {
+        id: appSettings
+        property bool bgmEnabled: true
+        property real bgmVolume: 0.45
+    }
 
     // BGM プレイヤー
     MediaPlayer {
@@ -31,9 +39,9 @@ Controls.ApplicationWindow {
         loops: MediaPlayer.Infinite
         audioOutput: AudioOutput {
             id: bgmAudio
-            volume: 0.45
+            volume: appSettings.bgmVolume
         }
-        Component.onCompleted: bgmPlayer.play()
+        Component.onCompleted: if (appSettings.bgmEnabled) bgmPlayer.play()
     }
 
     Timer {
@@ -253,6 +261,7 @@ Controls.ApplicationWindow {
                 text: root.bgmEnabled ? qsTr("♪ ON") : qsTr("♪ OFF")
                 onClicked: {
                     root.bgmEnabled = !root.bgmEnabled
+                    appSettings.bgmEnabled = root.bgmEnabled
                     if (root.bgmEnabled) {
                         bgmPlayer.play()
                     } else {
@@ -264,12 +273,15 @@ Controls.ApplicationWindow {
                 id: volumeSlider
                 from: 0.0
                 to: 1.0
-                value: bgmAudio.volume
+                value: appSettings.bgmVolume
                 stepSize: 0.05
                 enabled: root.bgmEnabled
                 opacity: root.bgmEnabled ? 1.0 : 0.4
                 implicitWidth: 80
-                onMoved: bgmAudio.volume = value
+                onMoved: {
+                    bgmAudio.volume = value
+                    appSettings.bgmVolume = value
+                }
 
                 Behavior on opacity { NumberAnimation { duration: 150 } }
             }
