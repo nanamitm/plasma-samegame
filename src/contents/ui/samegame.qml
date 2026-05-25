@@ -23,16 +23,19 @@ Controls.ApplicationWindow {
 
     property bool gameStarted: false
     property int displayScore: 0
-    property bool bgmEnabled: appSettings.bgmEnabled
-    property bool sfxEnabled: appSettings.sfxEnabled
+    property bool bgmEnabled:    appSettings.bgmEnabled
+    property bool popEnabled:    appSettings.popEnabled
+    property bool jingleEnabled: appSettings.jingleEnabled
 
     // 設定の永続化
     Settings {
         id: appSettings
-        property bool bgmEnabled: true
-        property real bgmVolume: 0.45
-        property bool sfxEnabled: true
-        property real sfxVolume: 0.7
+        property bool bgmEnabled:    true
+        property real bgmVolume:     0.45
+        property bool popEnabled:    true   // ブロック消去音
+        property real popVolume:     0.7
+        property bool jingleEnabled: true   // クリア／失敗ジングル
+        property real jingleVolume:  0.7
     }
 
     // BGM プレイヤー
@@ -48,27 +51,30 @@ Controls.ApplicationWindow {
     }
 
     // SFX — SoundEffect は WAV のみ保証のため MediaPlayer を使用
-    property real sfxVol: appSettings.sfxVolume
+    property real popVol:    appSettings.popVolume
+    property real jingleVol: appSettings.jingleVolume
 
     function playSfx(player) {
         player.stop()
         player.play()
     }
 
+    // ブロック消去音
     MediaPlayer {
         id: popSfx
         source: "qrc:/contents/ui/sounds/pop.ogg"
-        audioOutput: AudioOutput { volume: root.sfxVol }
+        audioOutput: AudioOutput { volume: root.popVol }
     }
+    // クリア／失敗ジングル
     MediaPlayer {
         id: clearSfx
         source: "qrc:/contents/ui/sounds/clear.ogg"
-        audioOutput: AudioOutput { volume: root.sfxVol }
+        audioOutput: AudioOutput { volume: root.jingleVol }
     }
     MediaPlayer {
         id: failureSfx
         source: "qrc:/contents/ui/sounds/failure.ogg"
-        audioOutput: AudioOutput { volume: root.sfxVol }
+        audioOutput: AudioOutput { volume: root.jingleVol }
     }
 
     Timer {
@@ -235,7 +241,7 @@ Controls.ApplicationWindow {
                 SameGame.handleClick(mouse.x, mouse.y)
                 const gained = gameCanvas.score - scoreBefore
                 if (gained > 0) {
-                    if (root.sfxEnabled) root.playSfx(popSfx)
+                    if (root.popEnabled) root.playSfx(popSfx)
                     root.showScorePopup(mouse.x, mouse.y, gained)
                     if (gained >= 36) // 7個以上消去でシェイク
                         shakeAnim.restart()
@@ -258,7 +264,7 @@ Controls.ApplicationWindow {
 
         onVisibleChanged: {
             gameOverOverlay.opacity = visible ? 0.6 : 0
-            if (visible && root.sfxEnabled) {
+            if (visible && root.jingleEnabled) {
                 if (gameCanvas.score > 0) root.playSfx(clearSfx)
                 else root.playSfx(failureSfx)
             }
@@ -297,9 +303,11 @@ Controls.ApplicationWindow {
                 }
             }
 
-            // オーディオ操作行
+            // オーディオ操作行（BGM / SE / Jingle）
             RowLayout {
                 Layout.fillWidth: true
+
+                // BGM
                 Controls.Label { text: qsTr("BGM:") }
                 Controls.ToolButton {
                     text: root.bgmEnabled ? qsTr("ON") : qsTr("OFF")
@@ -316,32 +324,52 @@ Controls.ApplicationWindow {
                     stepSize: 0.05
                     enabled: root.bgmEnabled
                     opacity: root.bgmEnabled ? 1.0 : 0.4
-                    implicitWidth: 80
+                    implicitWidth: 72
                     onMoved: { bgmAudio.volume = value; appSettings.bgmVolume = value }
                     Behavior on opacity { NumberAnimation { duration: 150 } }
                 }
 
-                Item { implicitWidth: 8 }
+                Item { implicitWidth: 6 }
 
-                Controls.Label { text: qsTr("SFX:") }
+                // SE（ブロック消去音）
+                Controls.Label { text: qsTr("SE:") }
                 Controls.ToolButton {
-                    text: root.sfxEnabled ? qsTr("ON") : qsTr("OFF")
+                    text: root.popEnabled ? qsTr("ON") : qsTr("OFF")
                     onClicked: {
-                        root.sfxEnabled = !root.sfxEnabled
-                        appSettings.sfxEnabled = root.sfxEnabled
+                        root.popEnabled = !root.popEnabled
+                        appSettings.popEnabled = root.popEnabled
                     }
                 }
                 Controls.Slider {
                     from: 0.0; to: 1.0
-                    value: appSettings.sfxVolume
+                    value: appSettings.popVolume
                     stepSize: 0.05
-                    enabled: root.sfxEnabled
-                    opacity: root.sfxEnabled ? 1.0 : 0.4
-                    implicitWidth: 80
-                    onMoved: {
-                        root.sfxVol = value
-                        appSettings.sfxVolume = value
+                    enabled: root.popEnabled
+                    opacity: root.popEnabled ? 1.0 : 0.4
+                    implicitWidth: 72
+                    onMoved: { root.popVol = value; appSettings.popVolume = value }
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                }
+
+                Item { implicitWidth: 6 }
+
+                // Jingle（クリア／失敗）
+                Controls.Label { text: qsTr("Jingle:") }
+                Controls.ToolButton {
+                    text: root.jingleEnabled ? qsTr("ON") : qsTr("OFF")
+                    onClicked: {
+                        root.jingleEnabled = !root.jingleEnabled
+                        appSettings.jingleEnabled = root.jingleEnabled
                     }
+                }
+                Controls.Slider {
+                    from: 0.0; to: 1.0
+                    value: appSettings.jingleVolume
+                    stepSize: 0.05
+                    enabled: root.jingleEnabled
+                    opacity: root.jingleEnabled ? 1.0 : 0.4
+                    implicitWidth: 72
+                    onMoved: { root.jingleVol = value; appSettings.jingleVolume = value }
                     Behavior on opacity { NumberAnimation { duration: 150 } }
                 }
             }
