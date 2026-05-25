@@ -47,21 +47,28 @@ Controls.ApplicationWindow {
         Component.onCompleted: if (appSettings.bgmEnabled) bgmPlayer.play()
     }
 
-    // SFX
-    SoundEffect {
+    // SFX — SoundEffect は WAV のみ保証のため MediaPlayer を使用
+    property real sfxVol: appSettings.sfxVolume
+
+    function playSfx(player) {
+        player.stop()
+        player.play()
+    }
+
+    MediaPlayer {
         id: popSfx
         source: "qrc:/contents/ui/sounds/pop.ogg"
-        volume: appSettings.sfxVolume
+        audioOutput: AudioOutput { volume: root.sfxVol }
     }
-    SoundEffect {
+    MediaPlayer {
         id: clearSfx
         source: "qrc:/contents/ui/sounds/clear.ogg"
-        volume: appSettings.sfxVolume
+        audioOutput: AudioOutput { volume: root.sfxVol }
     }
-    SoundEffect {
+    MediaPlayer {
         id: failureSfx
         source: "qrc:/contents/ui/sounds/failure.ogg"
-        volume: appSettings.sfxVolume
+        audioOutput: AudioOutput { volume: root.sfxVol }
     }
 
     Timer {
@@ -228,7 +235,7 @@ Controls.ApplicationWindow {
                 SameGame.handleClick(mouse.x, mouse.y)
                 const gained = gameCanvas.score - scoreBefore
                 if (gained > 0) {
-                    if (root.sfxEnabled) popSfx.play()
+                    if (root.sfxEnabled) root.playSfx(popSfx)
                     root.showScorePopup(mouse.x, mouse.y, gained)
                     if (gained >= 36) // 7個以上消去でシェイク
                         shakeAnim.restart()
@@ -252,8 +259,8 @@ Controls.ApplicationWindow {
         onVisibleChanged: {
             gameOverOverlay.opacity = visible ? 0.6 : 0
             if (visible && root.sfxEnabled) {
-                if (gameCanvas.score > 0) clearSfx.play()
-                else failureSfx.play()
+                if (gameCanvas.score > 0) root.playSfx(clearSfx)
+                else root.playSfx(failureSfx)
             }
         }
 
@@ -332,9 +339,7 @@ Controls.ApplicationWindow {
                     opacity: root.sfxEnabled ? 1.0 : 0.4
                     implicitWidth: 80
                     onMoved: {
-                        popSfx.volume = value
-                        clearSfx.volume = value
-                        failureSfx.volume = value
+                        root.sfxVol = value
                         appSettings.sfxVolume = value
                     }
                     Behavior on opacity { NumberAnimation { duration: 150 } }
