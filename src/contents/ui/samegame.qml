@@ -278,100 +278,109 @@ Controls.ApplicationWindow {
     }
     //![0]
 
-    footer: Controls.ToolBar {
-        id: toolBar
-        contentItem: ColumnLayout {
-            spacing: 0
+    // 音声設定ポップアップ
+    Controls.Popup {
+        id: audioPopup
+        modal: false
+        focus: true
+        closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside
+        padding: 12
 
-            // ゲーム操作行
-            RowLayout {
-                Layout.fillWidth: true
-                Controls.ToolButton {
-                    text: qsTr("New Game")
-                    onClicked: {
-                        root.gameStarted = true
-                        SameGame.startNewGame()
-                    }
-                }
-                Controls.ToolButton {
-                    text: qsTr("Quit")
-                    onClicked: Qt.quit()
-                }
-                Controls.Label {
-                    Layout.fillWidth: true
-                    text: qsTr("Score: ") + root.displayScore
+        // ツールバーの設定ボタンの真上に表示
+        x: settingsButton.mapToItem(root.contentItem, 0, 0).x
+           - width + settingsButton.width
+        y: settingsButton.mapToItem(root.contentItem, 0, 0).y - height - 4
+
+        GridLayout {
+            columns: 3
+            columnSpacing: 8
+            rowSpacing: 6
+
+            // ヘッダ
+            Controls.Label { text: qsTr("BGM");    font.bold: true }
+            Controls.ToolButton {
+                text: root.bgmEnabled ? qsTr("ON") : qsTr("OFF")
+                onClicked: {
+                    root.bgmEnabled = !root.bgmEnabled
+                    appSettings.bgmEnabled = root.bgmEnabled
+                    if (root.bgmEnabled) bgmPlayer.play()
+                    else bgmPlayer.pause()
                 }
             }
+            Controls.Slider {
+                from: 0.0; to: 1.0
+                value: appSettings.bgmVolume
+                stepSize: 0.05
+                enabled: root.bgmEnabled
+                opacity: root.bgmEnabled ? 1.0 : 0.4
+                implicitWidth: 120
+                onMoved: { bgmAudio.volume = value; appSettings.bgmVolume = value }
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+            }
 
-            // オーディオ操作行（BGM / SE / Jingle）
-            RowLayout {
+            Controls.Label { text: qsTr("SE");     font.bold: true }
+            Controls.ToolButton {
+                text: root.popEnabled ? qsTr("ON") : qsTr("OFF")
+                onClicked: {
+                    root.popEnabled = !root.popEnabled
+                    appSettings.popEnabled = root.popEnabled
+                }
+            }
+            Controls.Slider {
+                from: 0.0; to: 1.0
+                value: appSettings.popVolume
+                stepSize: 0.05
+                enabled: root.popEnabled
+                opacity: root.popEnabled ? 1.0 : 0.4
+                implicitWidth: 120
+                onMoved: { root.popVol = value; appSettings.popVolume = value }
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+            }
+
+            Controls.Label { text: qsTr("Jingle"); font.bold: true }
+            Controls.ToolButton {
+                text: root.jingleEnabled ? qsTr("ON") : qsTr("OFF")
+                onClicked: {
+                    root.jingleEnabled = !root.jingleEnabled
+                    appSettings.jingleEnabled = root.jingleEnabled
+                }
+            }
+            Controls.Slider {
+                from: 0.0; to: 1.0
+                value: appSettings.jingleVolume
+                stepSize: 0.05
+                enabled: root.jingleEnabled
+                opacity: root.jingleEnabled ? 1.0 : 0.4
+                implicitWidth: 120
+                onMoved: { root.jingleVol = value; appSettings.jingleVolume = value }
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+            }
+        }
+    }
+
+    footer: Controls.ToolBar {
+        id: toolBar
+        RowLayout {
+            anchors.fill: parent
+            Controls.ToolButton {
+                text: qsTr("New Game")
+                onClicked: {
+                    root.gameStarted = true
+                    SameGame.startNewGame()
+                }
+            }
+            Controls.ToolButton {
+                text: qsTr("Quit")
+                onClicked: Qt.quit()
+            }
+            Controls.Label {
                 Layout.fillWidth: true
-
-                // BGM
-                Controls.Label { text: qsTr("BGM:") }
-                Controls.ToolButton {
-                    text: root.bgmEnabled ? qsTr("ON") : qsTr("OFF")
-                    onClicked: {
-                        root.bgmEnabled = !root.bgmEnabled
-                        appSettings.bgmEnabled = root.bgmEnabled
-                        if (root.bgmEnabled) bgmPlayer.play()
-                        else bgmPlayer.pause()
-                    }
-                }
-                Controls.Slider {
-                    from: 0.0; to: 1.0
-                    value: appSettings.bgmVolume
-                    stepSize: 0.05
-                    enabled: root.bgmEnabled
-                    opacity: root.bgmEnabled ? 1.0 : 0.4
-                    implicitWidth: 72
-                    onMoved: { bgmAudio.volume = value; appSettings.bgmVolume = value }
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                }
-
-                Item { implicitWidth: 6 }
-
-                // SE（ブロック消去音）
-                Controls.Label { text: qsTr("SE:") }
-                Controls.ToolButton {
-                    text: root.popEnabled ? qsTr("ON") : qsTr("OFF")
-                    onClicked: {
-                        root.popEnabled = !root.popEnabled
-                        appSettings.popEnabled = root.popEnabled
-                    }
-                }
-                Controls.Slider {
-                    from: 0.0; to: 1.0
-                    value: appSettings.popVolume
-                    stepSize: 0.05
-                    enabled: root.popEnabled
-                    opacity: root.popEnabled ? 1.0 : 0.4
-                    implicitWidth: 72
-                    onMoved: { root.popVol = value; appSettings.popVolume = value }
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                }
-
-                Item { implicitWidth: 6 }
-
-                // Jingle（クリア／失敗）
-                Controls.Label { text: qsTr("Jingle:") }
-                Controls.ToolButton {
-                    text: root.jingleEnabled ? qsTr("ON") : qsTr("OFF")
-                    onClicked: {
-                        root.jingleEnabled = !root.jingleEnabled
-                        appSettings.jingleEnabled = root.jingleEnabled
-                    }
-                }
-                Controls.Slider {
-                    from: 0.0; to: 1.0
-                    value: appSettings.jingleVolume
-                    stepSize: 0.05
-                    enabled: root.jingleEnabled
-                    opacity: root.jingleEnabled ? 1.0 : 0.4
-                    implicitWidth: 72
-                    onMoved: { root.jingleVol = value; appSettings.jingleVolume = value }
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                }
+                text: qsTr("Score: ") + root.displayScore
+            }
+            Controls.ToolButton {
+                id: settingsButton
+                text: qsTr("⚙")
+                onClicked: audioPopup.open()
             }
         }
     }
