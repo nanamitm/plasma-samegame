@@ -49,6 +49,7 @@ Item {
 
     //![1]
     property bool spawned: false
+    property bool highlighted: false
 
     Behavior on x {
         enabled: spawned;
@@ -66,11 +67,11 @@ Item {
         anchors.fill: parent
         source: {
             if (type == 0)
-                return "qrc:/shared/pics/redStone.svg";
+                return "shared/pics/redStone.svg";
             else if (type == 1)
-                return "qrc:/shared/pics/blueStone.svg";
+                return "shared/pics/blueStone.svg";
             else
-                return "qrc:/shared/pics/greenStone.svg";
+                return "shared/pics/greenStone.svg";
         }
         opacity: 0
 
@@ -80,6 +81,15 @@ Item {
     }
     //![2]
 
+    // ハイライトオーバーレイ
+    Rectangle {
+        anchors.fill: parent
+        color: "white"
+        opacity: block.highlighted ? 0.4 : 0
+        z: 1
+        Behavior on opacity { NumberAnimation { duration: 120 } }
+    }
+
     //![3]
     ParticleSystem {
         id: sys
@@ -88,11 +98,11 @@ Item {
             // ![0]
             source: {
                 if (type == 0)
-                    return "qrc:/shared/pics/redStar.png";
+                    return "shared/pics/redStar.png";
                 else if (type == 1)
-                    return "qrc:/shared/pics/blueStar.png";
+                    return "shared/pics/blueStar.png";
                 else
-                    return "qrc:/shared/pics/greenStar.png";
+                    return "shared/pics/greenStar.png";
             }
             rotationVelocityVariation: 360
             // ![0]

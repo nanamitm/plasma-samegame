@@ -225,3 +225,37 @@ function sendHighScore(name) {
     postman.send(postData);
 }
 //![1]
+
+// ---- ホバーハイライト用関数 ----
+
+function getConnectedBlocks(xPos, yPos) {
+    if (maxIndex === 0) return [];
+    var column = Math.floor(xPos / gameCanvas.blockSize);
+    var row    = Math.floor(yPos / gameCanvas.blockSize);
+    if (column < 0 || column >= maxColumn || row < 0 || row >= maxRow) return [];
+    if (board[index(column, row)] == null) return [];
+
+    var found   = [];
+    var visited = new Array(maxIndex);
+    floodFind(column, row, board[index(column, row)].type, visited, found);
+    return found.length >= 2 ? found : [];
+}
+
+function floodFind(column, row, type, visited, found) {
+    if (column < 0 || column >= maxColumn || row < 0 || row >= maxRow) return;
+    if (board[index(column, row)] == null) return;
+    if (visited[index(column, row)]) return;
+    if (board[index(column, row)].type !== type) return;
+    visited[index(column, row)] = true;
+    found.push(board[index(column, row)]);
+    floodFind(column + 1, row, type, visited, found);
+    floodFind(column - 1, row, type, visited, found);
+    floodFind(column, row + 1, type, visited, found);
+    floodFind(column, row - 1, type, visited, found);
+}
+
+function clearHighlights() {
+    for (var i = 0; i < maxIndex; i++) {
+        if (board[i] != null) board[i].highlighted = false;
+    }
+}
