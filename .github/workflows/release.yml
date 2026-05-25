@@ -1,0 +1,149 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # ─── Windows ──────────────────────────────────────────────────────────
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.7.3'
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          modules: qtmultimedia qtsql qtsvg
+          cache: true
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Package (windeployqt)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory pkg
+          Copy-Item build\src\samegame.exe pkg\
+          & "$env:Qt6_DIR\bin\windeployqt.exe" `
+              --release --no-translations `
+              --qmldir src\contents\ui `
+              pkg\samegame.exe
+          Compress-Archive -Path pkg\* -DestinationPath samegame-windows-x64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: samegame-windows-x64.zip
+
+  # ─── Linux AppImage ───────────────────────────────────────────────────
+  linux:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1-mesa-dev \
+            libfuse2 \
+            patchelf \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad \
+            libgstreamer-plugins-base1.0-dev
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.7.3'
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          modules: qtmultimedia qtsql qtsvg
+          cache: true
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Create AppImage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+          VERSION: latest
+        run: |
+          wget -qO linuxdeploy.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -qO linuxdeploy-plugin-qt.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy.AppImage linuxdeploy-plugin-qt.AppImage
+
+          # アイコン
+          mkdir -p icons
+          cp src/contents/ui/shared/pics/star.png icons/samegame.png
+
+          # デスクトップファイル
+          cat > samegame.desktop << 'EOF'
+          [Desktop Entry]
+          Name=Samegame
+          Exec=samegame
+          Icon=samegame
+          Type=Application
+          Categories=Game;BoardGame;
+          EOF
+
+          QMAKE=$Qt6_DIR/bin/qmake \
+          QML_SOURCES_PATHS=$GITHUB_WORKSPACE/src/contents/ui \
+          ./linuxdeploy.AppImage \
+            --appdir AppDir \
+            --executable build/src/samegame \
+            --desktop-file samegame.desktop \
+            --icon-file icons/samegame.png \
+            --plugin qt \
+            --output appimage
+
+          mv Samegame*.AppImage samegame-linux-x86_64.AppImage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: samegame-linux-x86_64.AppImage
+
+  # ─── GitHub Release（タグ時のみ）─────────────────────────────────────
+  release:
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            samegame-windows-x64.zip
+            samegame-linux-x86_64.AppImage
