@@ -102,6 +102,13 @@ Controls.ApplicationWindow {
         onTriggered: if (root.gameStarted) SameGame.startNewGame()
     }
 
+    // スコアポップアップのクリック音を少し遅らせて消去音と分離
+    Timer {
+        id: clickSfxTimer
+        interval: 180
+        onTriggered: if (root.popEnabled) playSfx(clickSfx)
+    }
+
     // --- 演出1: スコアカウンターアニメーション ---
     NumberAnimation {
         id: scoreCountAnim
@@ -146,7 +153,7 @@ Controls.ApplicationWindow {
     }
 
     function showScorePopup(x, y, points) {
-        if (root.popEnabled) playSfx(clickSfx)
+        clickSfxTimer.restart()   // 180ms 後にクリック音を再生
         scorePopupComp.createObject(gameCanvas, {
             x: x - 20, y: y - 20,
             text: "+" + points
