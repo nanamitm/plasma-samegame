@@ -301,7 +301,7 @@ Controls.ApplicationWindow {
     // 音声設定ポップアップ
     Controls.Popup {
         id: audioPopup
-        parent: Overlay.overlay   // ウィンドウ全体を親にする
+        parent: Controls.Overlay.overlay   // ウィンドウ全体を親にする
         modal: false
         focus: true
         closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside
