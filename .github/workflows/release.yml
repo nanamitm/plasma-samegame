@@ -66,7 +66,8 @@ jobs:
           sudo apt-get install -y \
             libgl1-mesa-dev \
             libfuse2 \
-            patchelf
+            patchelf \
+            libxcb-cursor0
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
