@@ -102,12 +102,6 @@ Controls.ApplicationWindow {
         onTriggered: if (root.gameStarted) SameGame.startNewGame()
     }
 
-    // スコアポップアップのクリック音を少し遅らせて消去音と分離
-    Timer {
-        id: clickSfxTimer
-        interval: 180
-        onTriggered: if (root.popEnabled) playSfx(clickSfx)
-    }
 
     // --- 演出1: スコアカウンターアニメーション ---
     NumberAnimation {
@@ -153,7 +147,6 @@ Controls.ApplicationWindow {
     }
 
     function showScorePopup(x, y, points) {
-        clickSfxTimer.restart()   // 180ms 後にクリック音を再生
         scorePopupComp.createObject(gameCanvas, {
             x: x - 20, y: y - 20,
             text: "+" + points
@@ -239,12 +232,20 @@ Controls.ApplicationWindow {
             anchors.fill: parent
             hoverEnabled: true
 
+            // 直前にハイライトしていたグループの先頭ブロック
+            property var lastAnchorBlock: null
+
             onPositionChanged: (mouse) => {
                 if (!root.gameStarted) return
                 const blocks = SameGame.getConnectedBlocks(mouse.x, mouse.y)
                 SameGame.clearHighlights()
                 if (blocks.length >= 2) {
                     blocks.forEach(b => b.highlighted = true)
+                    // グループが変わったときだけクリック音を再生
+                    if (blocks[0] !== lastAnchorBlock) {
+                        lastAnchorBlock = blocks[0]
+                        if (root.popEnabled) root.playSfx(clickSfx)
+                    }
                     badgeText.text = blocks.length + " blocks"
                     // バッジがはみ出さないよう位置を調整
                     hoverBadge.x = Math.min(mouse.x + 12,
@@ -252,11 +253,13 @@ Controls.ApplicationWindow {
                     hoverBadge.y = Math.max(mouse.y - hoverBadge.height - 8, 4)
                     hoverBadge.visible = true
                 } else {
+                    lastAnchorBlock = null
                     hoverBadge.visible = false
                 }
             }
 
             onExited: {
+                lastAnchorBlock = null
                 SameGame.clearHighlights()
                 hoverBadge.visible = false
             }
