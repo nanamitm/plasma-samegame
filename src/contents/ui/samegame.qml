@@ -54,8 +54,15 @@ Controls.ApplicationWindow {
     property real popVol:    appSettings.popVolume
     property real jingleVol: appSettings.jingleVolume
 
+    // ブロック消去音：stop() → play() で即時再生
     function playSfx(player) {
         player.stop()
+        player.play()
+    }
+
+    // ジングル：BGM を止めてから再生し、終了後に BGM を再開
+    function playJingle(player) {
+        if (root.bgmEnabled) bgmPlayer.pause()
         player.play()
     }
 
@@ -65,16 +72,22 @@ Controls.ApplicationWindow {
         source: "qrc:/contents/ui/sounds/pop.ogg"
         audioOutput: AudioOutput { volume: root.popVol }
     }
-    // クリア／失敗ジングル
+    // クリア／失敗ジングル（再生終了時に BGM を再開）
     MediaPlayer {
         id: clearSfx
         source: "qrc:/contents/ui/sounds/clear.ogg"
         audioOutput: AudioOutput { volume: root.jingleVol }
+        onPlaybackStateChanged:
+            if (playbackState === MediaPlayer.StoppedState && root.bgmEnabled)
+                bgmPlayer.play()
     }
     MediaPlayer {
         id: failureSfx
         source: "qrc:/contents/ui/sounds/failure.ogg"
         audioOutput: AudioOutput { volume: root.jingleVol }
+        onPlaybackStateChanged:
+            if (playbackState === MediaPlayer.StoppedState && root.bgmEnabled)
+                bgmPlayer.play()
     }
 
     Timer {
@@ -265,8 +278,8 @@ Controls.ApplicationWindow {
         onVisibleChanged: {
             gameOverOverlay.opacity = visible ? 0.6 : 0
             if (visible && root.jingleEnabled) {
-                if (gameCanvas.score > 0) root.playSfx(clearSfx)
-                else root.playSfx(failureSfx)
+                if (gameCanvas.score > 0) root.playJingle(clearSfx)
+                else root.playJingle(failureSfx)
             }
         }
 
