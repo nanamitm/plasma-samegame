@@ -66,13 +66,19 @@ Controls.ApplicationWindow {
         player.play()
     }
 
-    // ブロック消去音
+    // ブロック消去音（通常）
     MediaPlayer {
         id: popSfx
         source: "qrc:/contents/ui/sounds/pop.ogg"
         audioOutput: AudioOutput { volume: root.popVol }
     }
-    // スコアポップアップ用クリック音
+    // ブロック消去音（シェイク：7個以上）
+    MediaPlayer {
+        id: shakeSfx
+        source: "qrc:/contents/ui/sounds/shake.ogg"
+        audioOutput: AudioOutput { volume: root.popVol }
+    }
+    // ホバーハイライト用クリック音
     MediaPlayer {
         id: clickSfx
         source: "qrc:/contents/ui/sounds/click.ogg"
@@ -271,7 +277,8 @@ Controls.ApplicationWindow {
                 SameGame.handleClick(mouse.x, mouse.y)
                 const gained = gameCanvas.score - scoreBefore
                 if (gained > 0) {
-                    if (root.popEnabled) root.playSfx(popSfx)
+                    if (root.popEnabled)
+                        root.playSfx(gained >= 36 ? shakeSfx : popSfx)
                     root.showScorePopup(mouse.x, mouse.y, gained)
                     if (gained >= 36) // 7個以上消去でシェイク
                         shakeAnim.restart()
