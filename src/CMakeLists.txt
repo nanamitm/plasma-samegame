@@ -9,6 +9,9 @@ qt_add_resources(samegame "app_resources"
         contents/ui/Dialog.qml
         contents/ui/samegame.js
         contents/ui/sounds/bgm.ogg
+        contents/ui/sounds/pop.ogg
+        contents/ui/sounds/clear.ogg
+        contents/ui/sounds/failure.ogg
         contents/ui/shared/pics/background.jpg
         contents/ui/shared/pics/blueStar.png
         contents/ui/shared/pics/blueStone.svg

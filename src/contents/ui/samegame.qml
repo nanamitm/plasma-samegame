@@ -24,12 +24,15 @@ Controls.ApplicationWindow {
     property bool gameStarted: false
     property int displayScore: 0
     property bool bgmEnabled: appSettings.bgmEnabled
+    property bool sfxEnabled: appSettings.sfxEnabled
 
     // 設定の永続化
     Settings {
         id: appSettings
         property bool bgmEnabled: true
         property real bgmVolume: 0.45
+        property bool sfxEnabled: true
+        property real sfxVolume: 0.7
     }
 
     // BGM プレイヤー
@@ -42,6 +45,23 @@ Controls.ApplicationWindow {
             volume: appSettings.bgmVolume
         }
         Component.onCompleted: if (appSettings.bgmEnabled) bgmPlayer.play()
+    }
+
+    // SFX
+    SoundEffect {
+        id: popSfx
+        source: "qrc:/contents/ui/sounds/pop.ogg"
+        volume: appSettings.sfxVolume
+    }
+    SoundEffect {
+        id: clearSfx
+        source: "qrc:/contents/ui/sounds/clear.ogg"
+        volume: appSettings.sfxVolume
+    }
+    SoundEffect {
+        id: failureSfx
+        source: "qrc:/contents/ui/sounds/failure.ogg"
+        volume: appSettings.sfxVolume
     }
 
     Timer {
@@ -208,6 +228,7 @@ Controls.ApplicationWindow {
                 SameGame.handleClick(mouse.x, mouse.y)
                 const gained = gameCanvas.score - scoreBefore
                 if (gained > 0) {
+                    if (root.sfxEnabled) popSfx.play()
                     root.showScorePopup(mouse.x, mouse.y, gained)
                     if (gained >= 36) // 7個以上消去でシェイク
                         shakeAnim.restart()
@@ -228,7 +249,13 @@ Controls.ApplicationWindow {
         anchors.centerIn: parent
         z: 100
 
-        onVisibleChanged: gameOverOverlay.opacity = visible ? 0.6 : 0
+        onVisibleChanged: {
+            gameOverOverlay.opacity = visible ? 0.6 : 0
+            if (visible && root.sfxEnabled) {
+                if (gameCanvas.score > 0) clearSfx.play()
+                else failureSfx.play()
+            }
+        }
 
         onClosed: {
             if (nameInputDialog.inputText.length > 0) {
@@ -240,50 +267,78 @@ Controls.ApplicationWindow {
 
     footer: Controls.ToolBar {
         id: toolBar
-        RowLayout {
-            anchors.fill: parent
-            Controls.ToolButton {
-                text: qsTr("New Game")
-                onClicked: {
-                    root.gameStarted = true
-                    SameGame.startNewGame()
-                }
-            }
-            Controls.ToolButton {
-                text: qsTr("Quit")
-                onClicked: Qt.quit()
-            }
-            Controls.Label {
+        contentItem: ColumnLayout {
+            spacing: 0
+
+            // ゲーム操作行
+            RowLayout {
                 Layout.fillWidth: true
-                text: qsTr("Score: ") + root.displayScore
-            }
-            Controls.ToolButton {
-                text: root.bgmEnabled ? qsTr("♪ ON") : qsTr("♪ OFF")
-                onClicked: {
-                    root.bgmEnabled = !root.bgmEnabled
-                    appSettings.bgmEnabled = root.bgmEnabled
-                    if (root.bgmEnabled) {
-                        bgmPlayer.play()
-                    } else {
-                        bgmPlayer.pause()
+                Controls.ToolButton {
+                    text: qsTr("New Game")
+                    onClicked: {
+                        root.gameStarted = true
+                        SameGame.startNewGame()
                     }
                 }
+                Controls.ToolButton {
+                    text: qsTr("Quit")
+                    onClicked: Qt.quit()
+                }
+                Controls.Label {
+                    Layout.fillWidth: true
+                    text: qsTr("Score: ") + root.displayScore
+                }
             }
-            Controls.Slider {
-                id: volumeSlider
-                from: 0.0
-                to: 1.0
-                value: appSettings.bgmVolume
-                stepSize: 0.05
-                enabled: root.bgmEnabled
-                opacity: root.bgmEnabled ? 1.0 : 0.4
-                implicitWidth: 80
-                onMoved: {
-                    bgmAudio.volume = value
-                    appSettings.bgmVolume = value
+
+            // オーディオ操作行
+            RowLayout {
+                Layout.fillWidth: true
+                Controls.Label { text: qsTr("BGM:") }
+                Controls.ToolButton {
+                    text: root.bgmEnabled ? qsTr("ON") : qsTr("OFF")
+                    onClicked: {
+                        root.bgmEnabled = !root.bgmEnabled
+                        appSettings.bgmEnabled = root.bgmEnabled
+                        if (root.bgmEnabled) bgmPlayer.play()
+                        else bgmPlayer.pause()
+                    }
+                }
+                Controls.Slider {
+                    from: 0.0; to: 1.0
+                    value: appSettings.bgmVolume
+                    stepSize: 0.05
+                    enabled: root.bgmEnabled
+                    opacity: root.bgmEnabled ? 1.0 : 0.4
+                    implicitWidth: 80
+                    onMoved: { bgmAudio.volume = value; appSettings.bgmVolume = value }
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
                 }
 
-                Behavior on opacity { NumberAnimation { duration: 150 } }
+                Item { implicitWidth: 8 }
+
+                Controls.Label { text: qsTr("SFX:") }
+                Controls.ToolButton {
+                    text: root.sfxEnabled ? qsTr("ON") : qsTr("OFF")
+                    onClicked: {
+                        root.sfxEnabled = !root.sfxEnabled
+                        appSettings.sfxEnabled = root.sfxEnabled
+                    }
+                }
+                Controls.Slider {
+                    from: 0.0; to: 1.0
+                    value: appSettings.sfxVolume
+                    stepSize: 0.05
+                    enabled: root.sfxEnabled
+                    opacity: root.sfxEnabled ? 1.0 : 0.4
+                    implicitWidth: 80
+                    onMoved: {
+                        popSfx.volume = value
+                        clearSfx.volume = value
+                        failureSfx.volume = value
+                        appSettings.sfxVolume = value
+                    }
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                }
             }
         }
     }
