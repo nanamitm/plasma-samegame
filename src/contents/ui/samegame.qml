@@ -72,6 +72,12 @@ Controls.ApplicationWindow {
         source: "qrc:/contents/ui/sounds/pop.ogg"
         audioOutput: AudioOutput { volume: root.popVol }
     }
+    // スコアポップアップ用クリック音
+    MediaPlayer {
+        id: clickSfx
+        source: "qrc:/contents/ui/sounds/click.ogg"
+        audioOutput: AudioOutput { volume: root.popVol }
+    }
     // クリア／失敗ジングル（再生終了時に BGM を再開）
     MediaPlayer {
         id: clearSfx
@@ -140,6 +146,7 @@ Controls.ApplicationWindow {
     }
 
     function showScorePopup(x, y, points) {
+        if (root.popEnabled) playSfx(clickSfx)
         scorePopupComp.createObject(gameCanvas, {
             x: x - 20, y: y - 20,
             text: "+" + points
