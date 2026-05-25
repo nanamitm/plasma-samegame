@@ -100,14 +100,7 @@ jobs:
           mkdir -p icons
           cp src/contents/ui/shared/pics/star.png icons/samegame.png
 
-          cat > samegame.desktop << 'EOF'
-[Desktop Entry]
-Name=Samegame
-Exec=samegame
-Icon=samegame
-Type=Application
-Categories=Game;BoardGame;
-EOF
+          printf '[Desktop Entry]\nName=Samegame\nExec=samegame\nIcon=samegame\nType=Application\nCategories=Game;BoardGame;\n' > samegame.desktop
 
           ./linuxdeploy.AppImage \
             --appdir AppDir \
