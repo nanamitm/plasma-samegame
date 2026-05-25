@@ -8,6 +8,7 @@ qt_add_resources(samegame "app_resources"
         contents/ui/BoomBlock.qml
         contents/ui/Dialog.qml
         contents/ui/samegame.js
+        contents/ui/sounds/bgm.ogg
         contents/ui/shared/pics/background.jpg
         contents/ui/shared/pics/blueStar.png
         contents/ui/shared/pics/blueStone.svg
@@ -25,7 +26,8 @@ target_link_libraries(samegame PRIVATE
     Qt::Quick
     Qt::QuickControls2
     Qt::Svg
-    Qt::Sql)
+    Qt::Sql
+    Qt::Multimedia)
 
 
 include(GNUInstallDirs)

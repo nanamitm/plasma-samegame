@@ -8,6 +8,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
+import QtMultimedia
 import "samegame.js" as SameGame
 
 Controls.ApplicationWindow {
@@ -21,6 +22,19 @@ Controls.ApplicationWindow {
 
     property bool gameStarted: false
     property int displayScore: 0
+    property bool bgmEnabled: true
+
+    // BGM プレイヤー
+    MediaPlayer {
+        id: bgmPlayer
+        source: "qrc:/contents/ui/sounds/bgm.ogg"
+        loops: MediaPlayer.Infinite
+        audioOutput: AudioOutput {
+            id: bgmAudio
+            volume: 0.45
+        }
+        Component.onCompleted: bgmPlayer.play()
+    }
 
     Timer {
         id: resizeTimer
@@ -234,6 +248,17 @@ Controls.ApplicationWindow {
             Controls.Label {
                 Layout.fillWidth: true
                 text: qsTr("Score: ") + root.displayScore
+            }
+            Controls.ToolButton {
+                text: root.bgmEnabled ? qsTr("♪ ON") : qsTr("♪ OFF")
+                onClicked: {
+                    root.bgmEnabled = !root.bgmEnabled
+                    if (root.bgmEnabled) {
+                        bgmPlayer.play()
+                    } else {
+                        bgmPlayer.pause()
+                    }
+                }
             }
         }
     }

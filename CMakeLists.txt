@@ -4,7 +4,7 @@ project(samegame)
 
 set(QT_MIN_VERSION "6.4.0")
 
-find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Svg Sql)
+find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Svg Sql Multimedia)
 qt_standard_project_setup()
 
 ################# build and install #################
